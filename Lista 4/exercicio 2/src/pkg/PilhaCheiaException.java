@@ -1,0 +1,12 @@
+package pkg;
+
+public class PilhaCheiaException extends Exception {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	public PilhaCheiaException() {
+        super("Pilha está cheia.");
+    }
+}

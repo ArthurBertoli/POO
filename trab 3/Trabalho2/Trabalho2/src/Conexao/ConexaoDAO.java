@@ -1,0 +1,17 @@
+/*package Conexao;
+
+import java.sql.Connection;
+
+public class ConexaoDAO {
+	
+	public Connection conectaBD() {
+		Connection conn = null;
+		
+		try {
+			
+		} catch (Exception e) {
+			
+		}
+	}
+
+}*/
