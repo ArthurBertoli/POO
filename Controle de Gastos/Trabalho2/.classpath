@@ -6,8 +6,7 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="src" path="Trabalho2/src"/>
-	<classpathentry kind="lib" path="C:/Users/Arthu/Desktop/jcommon-1.0.0.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Arthu/Desktop/jfreechart-1.0.0.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Arthu/Desktop/junit-3.8.jar"/>
+	<classpathentry kind="lib" path="Trabalho2/lib/jcommon-1.0.0.jar"/>
+	<classpathentry kind="lib" path="Trabalho2/lib/jfreechart-1.0.0.jar"/>
 	<classpathentry kind="output" path="Trabalho2/bin"/>
 </classpath>

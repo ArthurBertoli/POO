@@ -1,12 +1,16 @@
 package dados;
 
-import java.util.Date;
 import java.text.SimpleDateFormat;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.util.Date;
+import java.util.Locale;
 
 public class Gasto {
+    private static final Locale PT_BR = Locale.forLanguageTag("pt-BR");
+
+    /** Identificador no banco de dados (0 enquanto o gasto não foi gravado no banco). */
+    private int id;
+    /** CPF do usuário dono do gasto. */
+    private String usuarioCpf;
     private String nome;
     private Date data;
     private String descricao;
@@ -21,6 +25,22 @@ public class Gasto {
         this.valor = valor;
         this.categoria = categoria;
         this.setMonth(calcularMonth(data));
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getUsuarioCpf() {
+        return usuarioCpf;
+    }
+
+    public void setUsuarioCpf(String usuarioCpf) {
+        this.usuarioCpf = usuarioCpf;
     }
 
     public String getNome() {
@@ -64,9 +84,12 @@ public class Gasto {
         this.categoria = categoria;
     }
 
-    private String calcularMonth(Date data) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("MMMM");
-        return dateFormat.format(data);
+    /** Nome do mês da data do gasto, em português (ex.: "março"). */
+    private static String calcularMonth(Date data) {
+        if (data == null) {
+            return null;
+        }
+        return new SimpleDateFormat("MMMM", PT_BR).format(data);
     }
 
     public String getMonth() {
@@ -76,23 +99,10 @@ public class Gasto {
     public void setMonth(String month) {
         this.month = month;
     }
-    
-    public void salvarGasto(Connection conexao) {
-        String sql = "INSERT INTO gasto (nome, data, descricao, valor, categoria, mes) VALUES (?, ?, ?, ?, ?, ?)";
 
-        try (PreparedStatement statement = conexao.prepareStatement(sql)) {
-            statement.setString(1, this.getNome());
-            statement.setDate(2, new java.sql.Date(this.getData().getTime()));
-            statement.setString(3, this.getDescricao());
-            statement.setDouble(4, this.getValor());
-            statement.setString(5, this.getCategoria());
-            statement.setString(6, this.getMonth());
-
-            statement.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException("Erro ao salvar o gasto no banco de dados.", e);
-        }
-
+    @Override
+    public String toString() {
+        return nome + " (" + new SimpleDateFormat("dd/MM/yyyy").format(data) + ", " + categoria + ", R$ "
+                + String.format(PT_BR, "%.2f", valor) + ")";
     }
 }
-

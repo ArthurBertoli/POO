@@ -7,10 +7,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JButton;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import javax.swing.table.DefaultTableModel;
 import javax.swing.JTable;
@@ -21,6 +18,9 @@ import dados.Gasto;
 public class TabelaGastos extends JFrame {
 
     private static final long serialVersionUID = 1L;
+    private static final String TODOS_MESES = "Todos os meses";
+    private static final String TODAS_CATEGORIAS = "Todas as categorias";
+
     private DefaultTableModel tableModel;
     private JComboBox<String> comboMes;
     private JComboBox<String> comboCategoria;
@@ -35,57 +35,54 @@ public class TabelaGastos extends JFrame {
 
     private void initialize() {
         this.setTitle("Tabela de Gastos");
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        // Fechar a tabela não deve encerrar o programa.
+        this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.setBounds(100, 100, 800, 600);
 
         JPanel contentPane = new JPanel();
         setContentPane(contentPane);
         contentPane.setLayout(null);
 
-        tableModel = new DefaultTableModel();
+        tableModel = new DefaultTableModel() {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // a edição é feita pela tela "Alterar Gastos"
+            }
+        };
         JTable table = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBounds(10, 50, 760, 400);
         contentPane.add(scrollPane);
 
-        String[] meses = {"Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"};
+        String[] meses = {TODOS_MESES, "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"};
 
-        String[] categorias = {"Comida", "Lazer", "Educacao", "Saude", "Transporte", "Outros"};
+        String[] categorias = new String[Sistema.CATEGORIAS.length + 1];
+        categorias[0] = TODAS_CATEGORIAS;
+        System.arraycopy(Sistema.CATEGORIAS, 0, categorias, 1, Sistema.CATEGORIAS.length);
+
         comboMes = new JComboBox<>(meses);
         comboMes.setBounds(10, 10, 150, 30);
         contentPane.add(comboMes);
 
         comboCategoria = new JComboBox<>(categorias);
-        comboCategoria.setBounds(170, 10, 150, 30);
+        comboCategoria.setBounds(170, 10, 170, 30);
         contentPane.add(comboCategoria);
 
         btnFiltrar = new JButton("Filtrar");
-        btnFiltrar.setBounds(330, 10, 100, 30);
+        btnFiltrar.setBounds(350, 10, 100, 30);
         contentPane.add(btnFiltrar);
-        
+
         btnFiltrar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String mesSelecionado = (String) comboMes.getSelectedItem();
-                String categoriaSelecionada = (String) comboCategoria.getSelectedItem();
+                int indiceMes = comboMes.getSelectedIndex();
+                Integer mes = indiceMes <= 0 ? null : indiceMes; // índice 1 = janeiro
+                String categoria = comboCategoria.getSelectedIndex() <= 0
+                        ? null : (String) comboCategoria.getSelectedItem();
 
-                List<Gasto> gastos = sistema.obterGastos();
-                List<Gasto> gastosFiltrados = new ArrayList<>();
-
-                for (Gasto gasto : gastos) {
-                    String categoria = gasto.getCategoria();
-                    String mesGasto = new SimpleDateFormat("MMMM", new Locale("pt", "BR")).format(gasto.getData());
-
-                    if (mesSelecionado.equalsIgnoreCase(mesGasto) && categoriaSelecionada.equals(categoria)) {
-                        gastosFiltrados.add(gasto);
-                    }
-                }
-                
-                System.out.println("Mes selecionado: " + mesSelecionado);
-                System.out.println("Categoria selecionada: " + categoriaSelecionada);
-                System.out.println("Gastos filtrados: " + gastosFiltrados);
-
-                loadTableData(gastosFiltrados);
+                loadTableData(sistema.filtrarGastos(mes, categoria));
             }
         });
     }
@@ -97,15 +94,11 @@ public class TabelaGastos extends JFrame {
         for (Gasto gasto : gastos) {
             tableModel.addRow(new Object[]{
                 gasto.getNome(),
-                gasto.getData(),
+                Formatos.formatarData(gasto.getData()),
                 gasto.getDescricao(),
                 gasto.getValor(),
                 gasto.getCategoria()
             });
         }
     }
-
-	public void setGastos(List<Gasto> gastos) {
-		
-	}
 }

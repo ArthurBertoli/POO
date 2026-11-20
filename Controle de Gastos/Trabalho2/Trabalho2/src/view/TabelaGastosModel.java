@@ -31,7 +31,7 @@ public class TabelaGastosModel extends AbstractTableModel {
             case 0:
                 return gasto.getNome();
             case 1:
-                return gasto.getData();
+                return Formatos.formatarData(gasto.getData());
             case 2:
                 return gasto.getDescricao();
             case 3:
@@ -50,10 +50,8 @@ public class TabelaGastosModel extends AbstractTableModel {
 
     @Override
     public Class<?> getColumnClass(int columnIndex) {
-        if (getRowCount() > 0) {
-            return getValueAt(0, columnIndex).getClass();
-        }
-        return Object.class;
+        // Tipo fixo por coluna: não depende da primeira linha (que poderia ter valor nulo).
+        return columnIndex == 3 ? Double.class : String.class;
     }
 
     public void setGastos(List<Gasto> gastos) {
@@ -65,4 +63,3 @@ public class TabelaGastosModel extends AbstractTableModel {
         return gastos.get(rowIndex);
     }
 }
-

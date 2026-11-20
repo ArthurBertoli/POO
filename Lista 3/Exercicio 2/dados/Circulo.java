@@ -14,11 +14,11 @@ public class Circulo extends FormaGeometrica {
     }
 
     public int calculaArea() {
-        return (int) (3.14 * (raio * raio));
+        return (int) Math.round(Math.PI * raio * raio);
     }
 
     public int calculaPerimetro() {
-        return (int) (3.14 * (raio + raio));
+        return (int) Math.round(2 * Math.PI * raio);
     }
 
     public String toString() {

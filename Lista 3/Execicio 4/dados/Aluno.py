@@ -1,4 +1,4 @@
-from pessoa import Pessoa
+from dados.Pessoa import Pessoa
 
 class Aluno(Pessoa):
     def __init__(self, nome, notas):
@@ -15,4 +15,4 @@ class Aluno(Pessoa):
     def __repr__(self):
         media = self.calcularMedia()
         status = "Aprovado" if media >=7 else "Em exame"
-        return f"Aluno(nome='{self.nome}', notas={self.notas}, média={media}, status={status})"
+        return f"Aluno(nome='{self.nome}', notas={self.notas}, média={media:.2f}, status={status})"

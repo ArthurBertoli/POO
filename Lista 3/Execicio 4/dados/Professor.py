@@ -1,4 +1,4 @@
-from pessoa import Pessoa
+from dados.Pessoa import Pessoa
 
 class Professor(Pessoa):
     def __init__(self, nome, salario):

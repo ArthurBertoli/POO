@@ -3,7 +3,6 @@ package view;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.Date;
@@ -13,11 +12,9 @@ import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JTable;
 import javax.swing.JTextField;
 
 import dados.Gasto;
@@ -31,20 +28,18 @@ public class SegundaTela {
     private JTextField txtDescricao;
     private JTextField txtValor;
     private JComboBox<String> comboCategoria;
-    private List<Gasto> gastos;
-    private JTable tabela;  
-    private List<Gasto> gastosFiltrados; 
 
     private Sistema sistema;
 
     public SegundaTela(Sistema sistema) {
         this.sistema = sistema;
-        this.gastos = sistema.obterGastos();
         initialize();
     }
 
     private void initialize() {
-        frame = new JFrame();
+        String usuario = sistema.getUsuarioLogado() != null ? sistema.getUsuarioLogado().getNome() : "";
+        frame = new JFrame("Controle de Gastos - " + usuario
+                + (sistema.isPersistente() ? " (PostgreSQL)" : " (modo memória)"));
         frame.setBounds(100, 100, 515, 469);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().setLayout(null);
@@ -58,8 +53,8 @@ public class SegundaTela {
         frame.getContentPane().add(txtNome);
         txtNome.setColumns(10);
 
-        JLabel lblData = new JLabel("Data:");
-        lblData.setBounds(50, 60, 46, 14);
+        JLabel lblData = new JLabel("Data (dd/MM/aaaa):");
+        lblData.setBounds(10, 60, 135, 14);
         frame.getContentPane().add(lblData);
 
         txtData = new JTextField();
@@ -89,8 +84,7 @@ public class SegundaTela {
         lblCategoria.setBounds(50, 153, 90, 14);
         frame.getContentPane().add(lblCategoria);
 
-        String[] categorias = {"Comida", "Lazer", "Educacao", "Saude", "Transporte", "Outros"};
-        comboCategoria = new JComboBox<>(categorias);
+        comboCategoria = new JComboBox<>(Sistema.CATEGORIAS);
         comboCategoria.setBounds(150, 150, 200, 20);
         frame.getContentPane().add(comboCategoria);
 
@@ -155,17 +149,15 @@ public class SegundaTela {
 
                 double valor;
                 try {
-                    valor = Double.parseDouble(valorStr);
+                    valor = Formatos.lerValor(valorStr);
                 } catch (NumberFormatException ex) {
                     JOptionPane.showMessageDialog(frame, "Valor inválido. Insira um número válido.");
                     return;
                 }
 
-                SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
                 Date dataComoDate;
-
                 try {
-                    dataComoDate = dateFormat.parse(dataStr);
+                    dataComoDate = Formatos.lerData(dataStr);
                 } catch (ParseException ex) {
                     JOptionPane.showMessageDialog(frame, "Data inválida. Use o formato dd/MM/yyyy.");
                     return;
@@ -174,9 +166,15 @@ public class SegundaTela {
                 String categoria = (String) comboCategoria.getSelectedItem();
                 Gasto novoGasto = new Gasto(nome, dataComoDate, descricao, valor, categoria);
 
-                sistema.cadastrarGasto(novoGasto, categoria);
+                try {
+                    sistema.cadastrarGasto(novoGasto, categoria);
+                } catch (IllegalArgumentException | IllegalStateException ex) {
+                    JOptionPane.showMessageDialog(frame, ex.getMessage());
+                    return;
+                }
 
                 JOptionPane.showMessageDialog(frame, "Gasto cadastrado com sucesso!");
+                mostrarAvisoPersistencia();
 
                 txtNome.setText("");
                 txtData.setText("");
@@ -185,19 +183,20 @@ public class SegundaTela {
             }
         });
 
-        frame.setVisible(true);
-        
-       // sistema.fecharConexao();
+    }
+
+    private void mostrarAvisoPersistencia() {
+        String aviso = sistema.consumirAvisoPersistencia();
+        if (aviso != null) {
+            JOptionPane.showMessageDialog(frame, aviso, "Banco de dados indisponível", JOptionPane.WARNING_MESSAGE);
+        }
     }
 
     private void abrirTelaGraficoBarra() {
-        if (gastos != null) {
-            TelaGraficoBarra telaGraficoBarra = new TelaGraficoBarra("Gráfico de Gastos", gastos);
-            telaGraficoBarra.pack();
-            telaGraficoBarra.setVisible(true);
-        } else {
-            JOptionPane.showMessageDialog(frame, "A lista de gastos não foi inicializada corretamente.");
-        }
+        TelaGraficoBarra telaGraficoBarra = new TelaGraficoBarra("Gráfico de Gastos", sistema.obterGastos());
+        telaGraficoBarra.pack();
+        telaGraficoBarra.setLocationRelativeTo(frame);
+        telaGraficoBarra.setVisible(true);
     }
 
     private void abrirTabelaGastos() {
@@ -227,29 +226,19 @@ public class SegundaTela {
         frameGraficoAnual.getContentPane().add(graficoAnual.getChartPanel());
         
         frameGraficoAnual.pack();
+        frameGraficoAnual.setLocationRelativeTo(frame);
         frameGraficoAnual.setVisible(true);
     }
 
-	public JComponent getFrame() {
-		return null;
-	}
-	
-	private void abrirTabelaParaAlteracao() {
-	    if (gastos != null) {
-	        AlterarGastoTabela alterarGastoTabela = new AlterarGastoTabela(gastos, sistema);
-	    } else {
-	        JOptionPane.showMessageDialog(frame, "A lista de gastos não foi inicializada corretamente.");
-	    }
-	}
-
-	
-	public void setTabela(JTable tabela) {
-        this.tabela = tabela;
-    }
-	
-	public void setGastosFiltrados(List<Gasto> gastosFiltrados) {
-        this.gastosFiltrados = gastosFiltrados;
+    public JFrame getFrame() {
+        return frame;
     }
 
-
+    private void abrirTabelaParaAlteracao() {
+        if (sistema.obterGastos().isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "Nenhum gasto cadastrado para alterar.");
+            return;
+        }
+        new AlterarGastoTabela(sistema);
+    }
 }

@@ -1,11 +1,8 @@
 package view;
 
-import java.awt.Component;
 import java.time.YearMonth;
 import java.util.Map;
-
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
+import java.util.TreeMap;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -14,55 +11,48 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+/**
+ * Gráfico de dispersão "anual": total gasto em cada mês (1 a 12), com uma série por ano,
+ * calculado a partir dos gastos cadastrados.
+ */
 public class Scatter {
-	
+
     private Map<YearMonth, Double> valoresMensais;
+    private final ChartPanel chartPanel;
 
-	public Scatter(Map<YearMonth, Double> valoresMensais) {
-		this.setValoresMensais(valoresMensais);
-    	
-    	double[] valoresMensais1 = new double[12];
-  
-        for (int i = 0; i < 12; i++) {
-            String valorStr = JOptionPane.showInputDialog("Insira o valor para o mês " + (i + 1));
-            try {
-                valoresMensais1[i] = Double.parseDouble(valorStr);
-            } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(null, "Insira um valor válido para o mês " + (i + 1));
-                i--;
+    public Scatter(Map<YearMonth, Double> valoresMensais) {
+        this.setValoresMensais(valoresMensais);
+
+        XYSeriesCollection dataset = new XYSeriesCollection();
+        Map<Integer, XYSeries> seriesPorAno = new TreeMap<>();
+        for (Map.Entry<YearMonth, Double> entrada : new TreeMap<>(valoresMensais).entrySet()) {
+            int ano = entrada.getKey().getYear();
+            XYSeries serie = seriesPorAno.get(ano);
+            if (serie == null) {
+                serie = new XYSeries("Total mensal de " + ano);
+                seriesPorAno.put(ano, serie);
             }
+            serie.add(entrada.getKey().getMonthValue(), entrada.getValue());
+        }
+        for (XYSeries serie : seriesPorAno.values()) {
+            dataset.addSeries(serie);
         }
 
-        XYSeries series = new XYSeries("Valor Total Mensal");
-
-        for (int mes = 1; mes <= 12; mes++) {
-            series.add(mes, valoresMensais1[mes - 1]);
-        }
-
-        XYSeriesCollection dataset = new XYSeriesCollection(series);
-        JFreeChart chart = ChartFactory.createScatterPlot("Valor Total Mensal", "Mês", "Valor Total", dataset,PlotOrientation.VERTICAL, true, true, false); 
-        ChartPanel chartPanel = new ChartPanel(chart);
+        JFreeChart chart = ChartFactory.createScatterPlot("Valor Total Mensal", "Mês", "Valor Total", dataset,
+                PlotOrientation.VERTICAL, true, true, false);
+        chartPanel = new ChartPanel(chart);
         chartPanel.setPreferredSize(new java.awt.Dimension(800, 600));
+    }
 
-        JFrame frame = new JFrame("Gráfico de Dispersão Anual");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.getContentPane().add(chartPanel);
-        frame.pack();
-        frame.setVisible(true);
-	}
-    
+    public Map<YearMonth, Double> getValoresMensais() {
+        return valoresMensais;
+    }
 
-	public Map<YearMonth, Double> getValoresMensais() {
-		return valoresMensais;
-	}
+    public void setValoresMensais(Map<YearMonth, Double> valoresMensais) {
+        this.valoresMensais = valoresMensais;
+    }
 
-	public void setValoresMensais(Map<YearMonth, Double> valoresMensais) {
-		this.valoresMensais = valoresMensais;
-	}
-
-
-	public Component getChartPanel() {
-		return null;
-	}
+    public ChartPanel getChartPanel() {
+        return chartPanel;
+    }
 }
-

@@ -14,7 +14,7 @@ public class TrianguloEquilatero extends FormaGeometrica {
     }
 
     public int calculaArea() {
-        return (int) ((Math.sqrt(3) / 4) * (lado * lado));
+        return (int) Math.round((Math.sqrt(3) / 4) * (lado * lado));
     }
 
     public int calculaPerimetro() {

@@ -56,15 +56,35 @@ public class CalculadoraEstatistica implements ISequencia {
         return produto;
     }
 
+    /**
+     * Média geométrica calculada por logaritmos (exp da média dos logaritmos), o que evita
+     * o estouro do produto em {@code long} quando há muitos valores ou valores grandes.
+     * Retorna 0 se algum valor for 0 e {@code Double.NaN} se houver valor negativo
+     * (a média geométrica não é definida nesse caso).
+     */
     public double mediaGeometrica() {
-        return Math.pow(produtoTotal(), 1.0 / (double) sequencia.size());
+        double somaLogaritmos = 0;
+        for (final int x : sequencia) {
+            if (x < 0) {
+                return Double.NaN;
+            }
+            if (x == 0) {
+                return 0;
+            }
+            somaLogaritmos += Math.log(x);
+        }
+        return Math.exp(somaLogaritmos / sequencia.size());
     }
 
     public double mediaAritmetica() {
         return somatorio() / (double) sequencia.size();
     }
 
+    /** Variância amostral (divide por n - 1). Com menos de 2 valores, retorna 0. */
     public double variancia() {
+        if (sequencia.size() < 2) {
+            return 0;
+        }
         final double media = mediaAritmetica();
         double soma = 0;
         for (final int x : sequencia) {

@@ -3,6 +3,7 @@ package main;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -29,7 +30,9 @@ public class Calculadora extends JFrame {
     public Calculadora() {
         setTitle("Calculadora Estatística");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setBounds(100, 100, 900, 300);
+        setBounds(100, 100, 920, 310);
+        // Layout absoluto: sem isso o BorderLayout padrão ignoraria os setBounds abaixo.
+        getContentPane().setLayout(null);
 
         painelEntrada.setBounds(15, 80, 280, 173);
         painelEntrada.setLayout(null);
@@ -43,6 +46,7 @@ public class Calculadora extends JFrame {
 
         botaoAdicionar.setBounds(77, 94, 117, 25);
         painelEntrada.add(botaoAdicionar);
+        getRootPane().setDefaultButton(botaoAdicionar); // Enter também adiciona
 
         botaoLimpar.setBounds(77, 136, 117, 25);
         painelEntrada.add(botaoLimpar);
@@ -50,18 +54,26 @@ public class Calculadora extends JFrame {
         tabelaResultados = new JTable(resultados);
         painelScrollTabelaResultados.setBounds(10, 10, 880, 50);
         painelScrollTabelaResultados.setViewportView(tabelaResultados);
-        painelEntrada.add(painelScrollTabelaResultados);
+        getContentPane().add(painelScrollTabelaResultados);
 
         tabelaValores = new JTable(valores);
         painelScrollTabelaValores.setBounds(307, 80, 173, 173);
         painelScrollTabelaValores.setViewportView(tabelaValores);
-        painelEntrada.add(painelScrollTabelaValores);
+        getContentPane().add(painelScrollTabelaValores);
 
         botaoAdicionar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
-                valores.adicionarValor(Integer.parseInt(caixaTexto.getText()));
+                int valor;
+                try {
+                    valor = Integer.parseInt(caixaTexto.getText().trim());
+                } catch (NumberFormatException e) {
+                    JOptionPane.showMessageDialog(Calculadora.this, "Digite um número inteiro válido.");
+                    return;
+                }
+                valores.adicionarValor(valor);
                 resultados.atualizar();
                 caixaTexto.setText("");
+                caixaTexto.requestFocusInWindow();
             }
         });
 
@@ -74,7 +86,11 @@ public class Calculadora extends JFrame {
     }
 
     public static void main(String[] args) {
-        Calculadora frame = new Calculadora();
-        frame.setVisible(true);
+        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                Calculadora frame = new Calculadora();
+                frame.setVisible(true);
+            }
+        });
     }
 }

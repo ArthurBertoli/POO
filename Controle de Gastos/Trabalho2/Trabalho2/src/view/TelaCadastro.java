@@ -11,6 +11,8 @@ import negocio.Sistema;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class TelaCadastro {
 
@@ -30,11 +32,19 @@ public class TelaCadastro {
     }
 
     private void initialize() {
-        frame = new JFrame();
+        frame = new JFrame("Cadastro de usuário");
         frame.setBounds(100, 100, 450, 300);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        // Fechar o cadastro volta para a tela de login em vez de encerrar o programa.
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                primeiraTela.getFrame().setVisible(true);
+                primeiraTela.mostrarAvisoPersistencia();
+            }
+        });
         frame.getContentPane().setLayout(null);
-        
+
         JLabel lblCpf = new JLabel("CPF:");
         lblCpf.setBounds(50, 50, 46, 14);
         frame.getContentPane().add(lblCpf);
@@ -71,8 +81,9 @@ public class TelaCadastro {
         frame.getContentPane().add(passwordField);
 
         JButton btnCadastrar = new JButton("Cadastrar");
-        btnCadastrar.setBounds(150, 180, 89, 23);
+        btnCadastrar.setBounds(150, 180, 100, 23);
         frame.getContentPane().add(btnCadastrar);
+        frame.getRootPane().setDefaultButton(btnCadastrar);
 
         btnCadastrar.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -81,17 +92,16 @@ public class TelaCadastro {
                 String email = txtEmail.getText();
                 String senha = new String(passwordField.getPassword());
 
-                if (sistema.cadastrarUsuario(cpf, nome, email, senha)) {
-                    JOptionPane.showMessageDialog(frame, "Cadastro realizado com sucesso!");
-                    primeiraTela.getFrame().setVisible(true);
-                    frame.dispose();
-                } else {
-                    JOptionPane.showMessageDialog(frame, "Falha no cadastro. Verifique os dados e tente novamente.");
+                try {
+                    sistema.cadastrarUsuario(cpf, nome, email, senha);
+                } catch (IllegalArgumentException ex) {
+                    JOptionPane.showMessageDialog(frame, ex.getMessage(), "Falha no cadastro", JOptionPane.WARNING_MESSAGE);
+                    return;
                 }
+                JOptionPane.showMessageDialog(frame, "Cadastro realizado com sucesso!");
+                frame.dispose(); // volta para o login (windowClosed)
             }
         });
-
-        frame.setVisible(true);
     }
 
     public JFrame getFrame() {

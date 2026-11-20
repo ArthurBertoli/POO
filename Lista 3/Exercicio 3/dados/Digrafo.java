@@ -14,8 +14,9 @@ public class Digrafo {
         for (List<Integer> row : matrizAdjacente) {
             row.add(0);
         }
+        // A nova linha precisa de uma coluna para cada vértice, inclusive o que está sendo criado.
         List<Integer> newRow = new ArrayList<>();
-        for (int i = 0; i < matrizAdjacente.size(); i++) {
+        for (int i = 0; i <= matrizAdjacente.size(); i++) {
             newRow.add(0);
         }
         matrizAdjacente.add(newRow);
@@ -27,9 +28,13 @@ public class Digrafo {
         }
     }
 
+    protected String getNomeTipo() {
+        return "Dígrafo";
+    }
+
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append("Matriz de Adjacência do Dígrafo:\n");
+        sb.append("Matriz de Adjacência do ").append(getNomeTipo()).append(":\n");
         for (int i = 0; i < matrizAdjacente.size(); i++) {
             for (int j = 0; j < matrizAdjacente.get(i).size(); j++) {
                 sb.append(matrizAdjacente.get(i).get(j)).append(" ");

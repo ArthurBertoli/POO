@@ -27,6 +27,7 @@ public class PrimeiraTela {
                 try {
                     PrimeiraTela window = new PrimeiraTela();
                     window.frame.setVisible(true);
+                    window.mostrarAvisoPersistencia();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -35,12 +36,17 @@ public class PrimeiraTela {
     }
 
     public PrimeiraTela() {
-        sistema = new Sistema();
+        this(new Sistema());
+    }
+
+    public PrimeiraTela(Sistema sistema) {
+        this.sistema = sistema;
         initialize();
     }
 
     private void initialize() {
         frame = new JFrame();
+        frame.setTitle("Controle de Gastos - " + (sistema.isPersistente() ? "PostgreSQL" : "modo memória"));
         frame.setBounds(100, 100, 450, 300);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.getContentPane().setLayout(null);
@@ -54,7 +60,7 @@ public class PrimeiraTela {
         frame.getContentPane().add(txtCpf);
         txtCpf.setColumns(10);
 
-        JLabel lblNewLabel_1 = new JLabel("Senha");
+        JLabel lblNewLabel_1 = new JLabel("Senha:");
         lblNewLabel_1.setBounds(101, 98, 46, 14);
         frame.getContentPane().add(lblNewLabel_1);
 
@@ -65,6 +71,7 @@ public class PrimeiraTela {
         JButton btnNewButton = new JButton("Entrar");
         btnNewButton.setBounds(150, 147, 89, 23);
         frame.getContentPane().add(btnNewButton);
+        frame.getRootPane().setDefaultButton(btnNewButton);
 
         JButton btnCadastrar = new JButton("Cadastrar");
         btnCadastrar.setBounds(101, 180, 193, 23);
@@ -89,9 +96,18 @@ public class PrimeiraTela {
             public void actionPerformed(ActionEvent e) {
                 TelaCadastro telaCadastro = new TelaCadastro(PrimeiraTela.this, sistema);
                 telaCadastro.getFrame().setVisible(true);
-                frame.dispose();
+                frame.setVisible(false);
             }
         });
+    }
+
+    /** Avisa o usuário quando o banco de dados não pôde ser usado. */
+    void mostrarAvisoPersistencia() {
+        String aviso = sistema.consumirAvisoPersistencia();
+        if (aviso != null) {
+            JOptionPane.showMessageDialog(frame, aviso, "Banco de dados indisponível", JOptionPane.WARNING_MESSAGE);
+        }
+        frame.setTitle("Controle de Gastos - " + (sistema.isPersistente() ? "PostgreSQL" : "modo memória"));
     }
 
     public JFrame getFrame() {

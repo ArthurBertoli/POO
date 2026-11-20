@@ -26,12 +26,12 @@ public class TabelaValores extends AbstractTableModel {
 
     public void adicionarValor(int valor) {
         calculadora.adicionarValor(valor);
-        fireTableStructureChanged();
+        fireTableDataChanged();
     }
 
     public void limpar() {
         calculadora.limparValores();
-        fireTableStructureChanged();
+        fireTableDataChanged();
     }
 
 }

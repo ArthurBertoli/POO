@@ -4,21 +4,18 @@ import javax.swing.*;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.List;
 
 import dados.Gasto;
 import negocio.Sistema;
 
 public class AlterarGastoTabela extends JFrame {
-    /**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-	private JTable tabela;
-    private List<Gasto> gastos;
-    
-    public AlterarGastoTabela(List<Gasto> gastos, Sistema sistema) {
-        this.gastos = gastos;
+    private static final long serialVersionUID = 1L;
+    private JTable tabela;
+    private TabelaGastosModel tabelaModel;
+    private Sistema sistema;
+
+    public AlterarGastoTabela(Sistema sistema) {
+        this.sistema = sistema;
         initialize();
     }
 
@@ -27,8 +24,9 @@ public class AlterarGastoTabela extends JFrame {
         setSize(600, 400);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        TabelaGastosModel tabelaModel = new TabelaGastosModel(gastos);
+        tabelaModel = new TabelaGastosModel(sistema.obterGastos());
         tabela = new JTable(tabelaModel);
+        tabela.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         JScrollPane scrollPane = new JScrollPane(tabela);
         add(scrollPane);
@@ -52,12 +50,11 @@ public class AlterarGastoTabela extends JFrame {
     private void alterarGastoSelecionado() {
         int linhaSelecionada = tabela.getSelectedRow();
         if (linhaSelecionada >= 0) {
-            Gasto gastoSelecionado = gastos.get(linhaSelecionada);
-
-            AlterarGasto telaEdicao = new AlterarGasto(gastoSelecionado, tabela);
-            telaEdicao.setVisible(true);
+            // Converte o índice da tela para o do modelo (caso a tabela seja ordenada).
+            Gasto gastoSelecionado = tabelaModel.getGastoAt(tabela.convertRowIndexToModel(linhaSelecionada));
+            new AlterarGasto(gastoSelecionado, tabela, sistema);
         } else {
-            JOptionPane.showMessageDialog(null, "Selecione um gasto para editar.");
+            JOptionPane.showMessageDialog(this, "Selecione um gasto para editar.");
         }
     }
 }

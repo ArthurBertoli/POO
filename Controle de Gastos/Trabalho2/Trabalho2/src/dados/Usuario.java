@@ -1,9 +1,5 @@
 package dados;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
 public class Usuario {
     private String cpf;
     private String nome;
@@ -54,20 +50,5 @@ public class Usuario {
         return "CPF: " + cpf + "\n" +
                 "Nome: " + nome + "\n" +
                 "Email: " + email;
-    }
-    
-    public void salvarUsuario(Connection conexao) {
-        String sql = "INSERT INTO usuario (cpf, nome, email, senha) VALUES (?, ?, ?, ?)";
-
-        try (PreparedStatement statement = conexao.prepareStatement(sql)) {
-            statement.setString(1, this.getCpf());
-            statement.setString(2, this.getNome());
-            statement.setString(3, this.getEmail());
-            statement.setString(4, this.getSenha());
-
-            statement.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException("Erro ao salvar o usuário no banco de dados.", e);
-        }
     }
 }

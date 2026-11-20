@@ -4,20 +4,22 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import dados.Gasto;
+import negocio.Sistema;
 
 public class AlterarGasto extends JFrame {
     private static final long serialVersionUID = 1L;
     private Gasto gasto;
+    private Sistema sistema;
     private JTextField txtNome;
     private JTextField txtData;
     private JTextField txtDescricao;
     private JTextField txtValor;
     private JComboBox<String> comboCategoria;
     private JTable tabela;
-    
+
     private JPanel createPanel(JLabel label, JComponent component) {
         JPanel panel = new JPanel();
         panel.add(label);
@@ -25,10 +27,10 @@ public class AlterarGasto extends JFrame {
         return panel;
     }
 
-
-    public AlterarGasto(Gasto gasto, JTable tabela) {
+    public AlterarGasto(Gasto gasto, JTable tabela, Sistema sistema) {
         this.gasto = gasto;
         this.tabela = tabela;
+        this.sistema = sistema;
         initialize();
     }
 
@@ -39,25 +41,23 @@ public class AlterarGasto extends JFrame {
         setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 
         JLabel lblNome = new JLabel("Nome:");
-        txtNome = new JTextField(gasto.getNome());
+        txtNome = new JTextField(gasto.getNome(), 20);
         add(createPanel(lblNome, txtNome));
 
         JLabel lblData = new JLabel("Data:");
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-        txtData = new JTextField(dateFormat.format(gasto.getData()));
+        txtData = new JTextField(Formatos.formatarData(gasto.getData()), 20);
         add(createPanel(lblData, txtData));
 
         JLabel lblDescricao = new JLabel("Descrição:");
-        txtDescricao = new JTextField(gasto.getDescricao());
+        txtDescricao = new JTextField(gasto.getDescricao(), 20);
         add(createPanel(lblDescricao, txtDescricao));
 
         JLabel lblValor = new JLabel("Valor:");
-        txtValor = new JTextField(String.valueOf(gasto.getValor()));
+        txtValor = new JTextField(String.valueOf(gasto.getValor()), 20);
         add(createPanel(lblValor, txtValor));
 
         JLabel lblCategoria = new JLabel("Categoria:");
-        String[] categorias = {"Comida", "Lazer", "Educacao", "Saude", "Transporte", "Outros"};
-        comboCategoria = new JComboBox<>(categorias);
+        comboCategoria = new JComboBox<>(Sistema.CATEGORIAS);
         comboCategoria.setSelectedItem(gasto.getCategoria());
         add(createPanel(lblCategoria, comboCategoria));
 
@@ -74,13 +74,6 @@ public class AlterarGasto extends JFrame {
         setVisible(true);
     }
 
-    private JPanel createPanel(JLabel label, JTextField textField) {
-        JPanel panel = new JPanel();
-        panel.add(label);
-        panel.add(textField);
-        return panel;
-    }
-
     private void salvarAlteracoes() {
         String nome = txtNome.getText().trim();
         String dataStr = txtData.getText().trim();
@@ -94,26 +87,35 @@ public class AlterarGasto extends JFrame {
 
         double valor;
         try {
-            valor = Double.parseDouble(valorStr);
+            valor = Formatos.lerValor(valorStr);
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Valor inválido. Insira um número válido.");
             return;
         }
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+        // A data é validada antes de mexer no gasto, para não deixá-lo alterado pela metade.
+        Date data;
         try {
-            gasto.setNome(nome);
-            gasto.setData(dateFormat.parse(dataStr));
-            gasto.setDescricao(descricao);
-            gasto.setValor(valor);
-            gasto.setCategoria((String) comboCategoria.getSelectedItem());
-
-            ((TabelaGastosModel) tabela.getModel()).fireTableDataChanged();
-
-            JOptionPane.showMessageDialog(this, "Alterações salvas com sucesso!");
-            dispose();
+            data = Formatos.lerData(dataStr);
         } catch (ParseException ex) {
-            JOptionPane.showMessageDialog(this, "Erro ao salvar as alterações. Verifique os dados e tente novamente.");
+            JOptionPane.showMessageDialog(this, "Data inválida. Use o formato dd/MM/yyyy.");
+            return;
         }
+
+        try {
+            sistema.alterarGasto(gasto, nome, data, descricao, valor, (String) comboCategoria.getSelectedItem());
+        } catch (IllegalArgumentException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage());
+            return;
+        }
+
+        ((TabelaGastosModel) tabela.getModel()).fireTableDataChanged();
+
+        JOptionPane.showMessageDialog(this, "Alterações salvas com sucesso!");
+        String aviso = sistema.consumirAvisoPersistencia();
+        if (aviso != null) {
+            JOptionPane.showMessageDialog(this, aviso, "Banco de dados indisponível", JOptionPane.WARNING_MESSAGE);
+        }
+        dispose();
     }
 }
